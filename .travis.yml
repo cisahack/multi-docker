@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install: 
+  - docker build -t cisahack/react-test -f ./client/Docker.dev ./client
+
+script:
+  - docker run cisahack/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t cisahack/multi-client ./client
+  - docker build -t cisahack/multi-nginx ./nginx
+  - docker build -t cisahack/multi-server ./server
+  - docker build -t cisahack/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push cisahack/multi-client
+  - docker push cisahack/multi-nginx
+  - docker push cisahack/multi-server
+  - docker push cisahack/multi-worker
